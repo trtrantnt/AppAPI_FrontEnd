@@ -63,7 +63,27 @@
     </div>
 
     <div class="pagination-container d-flex justify-content-center mt-4">
-      <!-- Phân trang -->
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: page <= 1 }">
+            <a class="page-link" href="#" @click.prevent="goToPage(page - 1)">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          
+          <li v-for="pageNumber in totalPages" :key="pageNumber" class="page-item" :class="{ active: pageNumber === page }">
+            <a class="page-link" href="#" @click.prevent="goToPage(pageNumber)">
+              {{ pageNumber }}
+            </a>
+          </li>
+          
+          <li class="page-item" :class="{ disabled: page >= totalPages }">
+            <a class="page-link" href="#" @click.prevent="goToPage(page + 1)">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
@@ -143,6 +163,12 @@ export default {
         this.categories = []; // Set to empty array on error
       }
     },
+    goToPage(pageNumber) {
+      if (pageNumber >= 1 && pageNumber <= this.totalPages) {
+        this.page = pageNumber;
+        this.fetchProducts();
+      }
+    },
     searchProducts() {
       this.page = 1;
       this.fetchProducts();
@@ -168,5 +194,16 @@ export default {
 .card-img-top {
   height: 200px;
   object-fit: cover;
+}
+.pagination-container {
+  margin-top: 2rem;
+}
+.pagination-btn {
+  margin: 0 0.25rem;
+  min-width: 40px;
+}
+.page-item.active .page-link {
+  background-color: #007bff;
+  border-color: #007bff;
 }
 </style>
