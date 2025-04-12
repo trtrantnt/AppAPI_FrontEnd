@@ -1,73 +1,56 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-      <router-link class="navbar-brand" to="">Scan & Savor</router-link>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+      <router-link class="navbar-brand" to="/">Scan & Savor</router-link>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li v-for="menu in dropdownMenus" :key="menu.text" class="nav-item dropdown">
+                    
+          <!-- Single Menu Items -->
+          <li v-for="menu in singleMenus" :key="menu.url" class="nav-item">
+            <router-link class="nav-link" :to="menu.url">{{ menu.text }}</router-link>
+          </li>
+          
+          <!-- Dropdown Menu Items -->
+          <li v-for="menu in dropdownMenus" :key="menu.url" class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
               {{ menu.text }}
             </a>
             <ul class="dropdown-menu">
-              <li v-for="child in menu.children" :key="child.text">
+              <li v-for="child in menu.children" :key="child.url">
                 <router-link class="dropdown-item" :to="child.url">{{ child.text }}</router-link>
               </li>
             </ul>
           </li>
-          <li v-for="menu in singleMenus" :key="menu.text" class="nav-item">
-            <router-link class="nav-link" :to="menu.url">{{ menu.text }}</router-link>
-          </li>
         </ul>
-        <ul class="navbar-nav">
-          <template v-if="isLoggedIn">
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="userDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {{ currentUser.name || currentUser.email }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li v-if="isAdmin">
-                  <router-link class="dropdown-item" to="/admin">Quản trị</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/profile">Hồ sơ</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/change-password">Đổi mật khẩu</router-link>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a class="dropdown-item" href="#" @click.prevent="logout">Đăng xuất</a>
-                </li>
-              </ul>
-            </li>
+        
+        <!-- Auth Buttons -->
+        <div class="d-flex">
+          <template v-if="!isLoggedIn">
+            <router-link to="/auth/login" class="btn btn-outline-primary me-2">
+              Đăng nhập
+            </router-link>
+            <router-link to="/auth/register" class="btn btn-primary">
+              Đăng ký
+            </router-link>
           </template>
           <template v-else>
-            <li class="nav-item">
-              <router-link class="nav-link" to="/login">Đăng nhập</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" to="/register">Đăng ký</router-link>
-            </li>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ currentUser ? currentUser.fullname || currentUser.username : 'Tài khoản' }}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><router-link class="dropdown-item" to="/user/profile">Thông tin tài khoản</router-link></li>
+                <li><router-link class="dropdown-item" to="/user/orders">Đơn hàng của tôi</router-link></li>
+                <li v-if="isAdmin"><router-link class="dropdown-item" to="/admin">Quản trị</router-link></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="handleLogout">Đăng xuất</a></li>
+              </ul>
+            </div>
           </template>
-        </ul>
+        </div>
       </div>
     </div>
   </nav>
@@ -90,7 +73,15 @@ export default {
   },
   methods: {
     ...mapActions('auth', ['logout']),
-    ...mapActions('menu', ['fetchMenus'])
+    ...mapActions('menu', ['fetchMenus']),
+    async handleLogout() {
+      try {
+        await this.logout();
+        this.$router.push('/');
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
+    }
   },
   created() {
     this.fetchMenus();

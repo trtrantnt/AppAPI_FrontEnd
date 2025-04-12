@@ -2,19 +2,21 @@
   <div class="home">
     <section class="hero-section py-5 bg-light">
       <div class="container">
-        <div class="row align-items-center">
+        <div class="row align-items-center text-center">
           <div class="col-md-6">
-            <h2 class="display-4">Chào mừng đến với Scan & Savor</h2>
-            <p class="lead">Scan mã để order và tận hưởng món ăn.</p>
-            <router-link to="/products" class="btn btn-primary btn-lg">
-              Đăng ký ngay
-            </router-link>
+            <h2 class="display-4 fw-bold">Chào mừng đến với Scan & Savor</h2>
+            <p class="lead my-4">Scan mã để order và tận hưởng món ăn.</p>
+            <div class="mt-4">
+              <router-link to="/auth/register" class="btn btn-outline-primary btn-lg">
+                Đăng ký ngay
+              </router-link>
+            </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 text-center">
             <img 
-              src="https://placeholder.pics/svg/600x400/DEDEDE/555555/Shopping%20Image" 
+              src="@/assets/bg1.png"
               alt="Shopping" 
-              class="img-fluid rounded" 
+              class="img-fluid rounded hero-image" 
             />
           </div>
         </div>
@@ -57,6 +59,7 @@
 
 <script>
 import ProductService from '@/services/product.service';
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'HomeView',
@@ -65,6 +68,9 @@ export default {
       featuredProducts: [],
       loading: true
     };
+  },
+  computed: {
+    ...mapGetters('auth', ['isLoggedIn', 'currentUser'])
   },
   created() {
     this.fetchFeaturedProducts();
@@ -92,8 +98,25 @@ export default {
 
 <style scoped>
 .hero-section {
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
+  padding: 3rem 0;
 }
+
+.hero-image {
+  max-height: 400px;
+  object-fit: contain;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.display-4 {
+  color: #333;
+  line-height: 1.2;
+}
+
+.featured-products {
+  margin-bottom: 2rem;
+}
+
 .card-img-top {
   height: 200px;
   object-fit: cover;

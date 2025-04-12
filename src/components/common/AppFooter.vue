@@ -1,7 +1,7 @@
 <template>
   <footer class="bg-light mt-5 py-3">
     <div class="container text-center">
-      <p>© 2025 Shop Online. All rights reserved.</p>
+      <p>©2025 Scan & Savor. All rights reserved.</p>
     </div>
   </footer>
 </template>
