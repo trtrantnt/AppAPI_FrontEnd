@@ -1,19 +1,14 @@
 <template>
-  <footer class="footer mt-auto py-3 bg-light">
+  <footer class="bg-light mt-5 py-3">
     <div class="container text-center">
-      <span class="text-muted">© {{ currentYear }} Your App Name. All rights reserved.</span>
+      <p>© 2025 Shop Online. All rights reserved.</p>
     </div>
   </footer>
 </template>
 
 <script>
 export default {
-  name: 'AppFooter',
-  computed: {
-    currentYear() {
-      return new Date().getFullYear()
-    }
-  }
+  name: 'AppFooter'
 }
 </script>
 

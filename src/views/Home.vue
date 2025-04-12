@@ -4,10 +4,10 @@
       <div class="container">
         <div class="row align-items-center">
           <div class="col-md-6">
-            <h1 class="display-4">Chào mừng đến với E-Commerce</h1>
-            <p class="lead">Khám phá các sản phẩm chất lượng cao với giá tốt nhất trên thị trường.</p>
+            <h2 class="display-4">Chào mừng đến với Scan & Savor</h2>
+            <p class="lead">Scan mã để order và tận hưởng món ăn.</p>
             <router-link to="/products" class="btn btn-primary btn-lg">
-              Mua sắm ngay
+              Đăng ký ngay
             </router-link>
           </div>
           <div class="col-md-6">

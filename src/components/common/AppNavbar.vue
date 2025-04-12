@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-      <router-link class="navbar-brand" to="/">E-Commerce App</router-link>
+      <router-link class="navbar-brand" to="">Scan & Savor</router-link>
       <button
         class="navbar-toggler"
         type="button"
@@ -15,11 +15,18 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <router-link class="nav-link" to="/">Trang chủ</router-link>
+          <li v-for="menu in dropdownMenus" :key="menu.text" class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              {{ menu.text }}
+            </a>
+            <ul class="dropdown-menu">
+              <li v-for="child in menu.children" :key="child.text">
+                <router-link class="dropdown-item" :to="child.url">{{ child.text }}</router-link>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item">
-            <router-link class="nav-link" to="/products">Sản phẩm</router-link>
+          <li v-for="menu in singleMenus" :key="menu.text" class="nav-item">
+            <router-link class="nav-link" :to="menu.url">{{ menu.text }}</router-link>
           </li>
         </ul>
         <ul class="navbar-nav">
@@ -72,10 +79,21 @@ import { mapGetters, mapActions } from 'vuex';
 export default {
   name: 'AppNavbar',
   computed: {
-    ...mapGetters('auth', ['isLoggedIn', 'currentUser', 'isAdmin'])
+    ...mapGetters('auth', ['isLoggedIn', 'currentUser', 'isAdmin']),
+    ...mapGetters('menu', ['menus']),
+    dropdownMenus() {
+      return this.menus.filter(menu => menu.children && menu.children.length > 0);
+    },
+    singleMenus() {
+      return this.menus.filter(menu => !menu.children || menu.children.length === 0);
+    }
   },
   methods: {
-    ...mapActions('auth', ['logout'])
+    ...mapActions('auth', ['logout']),
+    ...mapActions('menu', ['fetchMenus'])
+  },
+  created() {
+    this.fetchMenus();
   }
 };
 </script>
