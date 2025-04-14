@@ -33,12 +33,10 @@
                 <tr v-for="(product, index) in products" :key="product._id">
                   <td>{{ index + 1 }}</td>
                   <td>
-                    <img
-                      :src="product.image ? `http://localhost:4000/${product.image}` : '/placeholder.jpg'"
-                      alt=""
-                      width="50"
-                      height="50"
-                      class="img-thumbnail"
+                    <product-image
+                      :src="product.image"
+                      :alt="product.name"
+                      size="small"
                     />
                   </td>
                   <td>{{ product.name }}</td>
@@ -98,10 +96,15 @@
   <script>
   import ProductService from '@/services/product.service';
   import CategoryService from '@/services/category.service';
+  import ImageService from '@/services/image.service';
+  import ProductImage from '@/components/common/ProductImage.vue';
   import { Modal } from 'bootstrap';
   
   export default {
     name: 'AdminProducts',
+    components: {
+      ProductImage
+    },
     data() {
       return {
         products: [],
@@ -179,7 +182,9 @@
           formData.append('description', this.formData.description);
           
           if (this.formData.image) {
-            formData.append('image', this.formData.image);
+            // Upload ảnh trước và nhận URL
+            const uploadResponse = await ImageService.uploadProductImage(this.formData.image);
+            formData.append('image', uploadResponse.data.imageUrl);
           }
           
           if (this.editingProduct) {

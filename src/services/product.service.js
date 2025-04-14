@@ -11,10 +11,17 @@ class ProductService {
         
         // Nếu dữ liệu có cấu trúc lồng nhau, điều chỉnh để phù hợp với frontend
         if (response.data && response.data.data && response.data.data.data) {
-          // Cấu trúc lồng 2 lần: {data: {data: [...]}}
+          // Xử lý mỗi sản phẩm để đảm bảo có trường image
+          const products = response.data.data.data.map(product => {
+            if (product.imgURL && !product.image) {
+              product.image = product.imgURL;
+            }
+            return product;
+          });
+          
           return {
             data: {
-              data: response.data.data.data,
+              data: products,
               total: response.data.data.total,
               page: response.data.data.page,
               limit: response.data.data.limit,
@@ -34,12 +41,24 @@ class ProductService {
         
         // Xử lý trường hợp dữ liệu lồng nhau
         if (response.data && response.data.data && response.data.data.data) {
-          // Trả về cấu trúc phù hợp với frontend
+          // Đảm bảo chuyển đổi trường imgURL thành image nếu cần
+          const productData = response.data.data.data;
+          if (productData.imgURL && !productData.image) {
+            productData.image = productData.imgURL;
+          }
+          
           return {
             data: {
-              data: response.data.data.data
+              data: productData
             }
           };
+        }
+        
+        // Đảm bảo chuyển đổi trường imgURL thành image trong trường hợp đơn giản
+        if (response.data && response.data.data) {
+          if (response.data.data.imgURL && !response.data.data.image) {
+            response.data.data.image = response.data.data.imgURL;
+          }
         }
         
         return response;

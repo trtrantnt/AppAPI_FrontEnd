@@ -114,41 +114,95 @@
 
 <script>
 import ProductService from '@/services/product.service';
-import AdminService from '@/services/admin.service';
+import CategoryService from '@/services/category.service';
+import UserService from '@/services/user.service';
+import OrderService from '@/services/order.service';
 
 export default {
-  // Fix ESLint warning by using a multi-word component name
-  name: 'DashboardView',
+  name: 'AdminDashboard',
   data() {
     return {
-      loading: true,
       statistics: {
         products: 0,
         categories: 0,
         users: 0,
         orders: 0
       },
-      recentProducts: []
+      recentProducts: [],
+      loading: true
     };
   },
-  created() {
-    this.fetchDashboardData();
+  mounted() {
+    this.fetchStatistics();
+    this.fetchRecentProducts();
   },
   methods: {
-    async fetchDashboardData() {
+    async fetchStatistics() {
       this.loading = true;
       try {
-        // Fetch dashboard statistics
-        const statsResponse = await AdminService.getDashboardStats();
-        this.statistics = statsResponse.data.data;
+        // Fetch product statistics directly
+        const productsRes = await ProductService.getAll();
+        console.log('Products response:', productsRes.data);
+        // Make sure we correctly extract the product count
+        if (productsRes.data) {
+          if (productsRes.data.totalItems !== undefined) {
+            this.statistics.products = productsRes.data.totalItems;
+          } else if (productsRes.data.data && Array.isArray(productsRes.data.data)) {
+            this.statistics.products = productsRes.data.data.length;
+          }
+        }
         
-        // Fetch recent products
-        const productsResponse = await ProductService.getAll({ limit: 5, sort: '-createdAt' });
-        this.recentProducts = productsResponse.data.data;
+        // Fetch category statistics directly
+        const categoriesRes = await CategoryService.getAll();
+        console.log('Categories response for dashboard:', categoriesRes);
+        
+        // Handle different response formats
+        if (categoriesRes.data) {
+          if (categoriesRes.data.success && Array.isArray(categoriesRes.data.data)) {
+            this.statistics.categories = categoriesRes.data.data.length;
+          } else if (Array.isArray(categoriesRes.data)) {
+            this.statistics.categories = categoriesRes.data.length;
+          } else if (categoriesRes.data.data && Array.isArray(categoriesRes.data.data)) {
+            this.statistics.categories = categoriesRes.data.data.length;
+          } else {
+            this.statistics.categories = 0;
+            console.warn('Unexpected categories response format:', categoriesRes);
+          }
+        }
+        
+        const usersRes = await UserService.getAll();
+        if (usersRes.data && usersRes.data.data) {
+          this.statistics.users = usersRes.data.data.length;
+        }
+        
+        // Handle orders in a safer way
+        try {
+          const ordersRes = await OrderService.getAll();
+          if (ordersRes.data && ordersRes.data.data) {
+            this.statistics.orders = ordersRes.data.data.length;
+          }
+        } catch (e) {
+          console.log('Order service API might not be implemented yet:', e);
+          this.statistics.orders = 0;
+        }
+        
+        console.log('Dashboard statistics updated:', this.statistics);
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error fetching statistics:', error);
+        this.$toast?.error('Failed to load dashboard statistics');
       } finally {
         this.loading = false;
+      }
+    },
+    async fetchRecentProducts() {
+      try {
+        const response = await ProductService.getAll({
+          sort: '-createdAt',
+          limit: 5
+        });
+        this.recentProducts = response.data.data || [];
+      } catch (error) {
+        console.error('Error fetching recent products:', error);
       }
     },
     formatPrice(price) {

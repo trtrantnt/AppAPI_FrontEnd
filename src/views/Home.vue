@@ -55,17 +55,17 @@
         <div v-else class="row">
           <div v-for="product in featuredProducts" :key="product._id" class="col-md-4 mb-4">
             <div class="card h-100">
-              <img
-                :src="product.image ? `http://localhost:4000/${product.image}` : '/placeholder.jpg'"
-                class="card-img-top"
+              <product-image
+                :src="product.image || product.imgURL"
                 :alt="product.name"
+                class="card-img-top"
               />
               <div class="card-body">
                 <h5 class="card-title">{{ product.name }}</h5>
                 <p class="card-text">{{ product.description }}</p>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="fw-bold">{{ formatPrice(product.price) }}</span>
-                  <router-link :to="`/products/${product._id}`" class="btn btn-primary">
+                  <router-link :to="`/product/${product._id}`" class="btn btn-primary">
                     Xem chi tiết
                   </router-link>
                 </div>
@@ -82,11 +82,13 @@
 import ProductService from '@/services/product.service';
 import { mapGetters, mapActions } from 'vuex';
 import CategoryList from '@/components/category/CategoryList.vue';
+import ProductImage from '@/components/common/ProductImage.vue';
 
 export default {
   name: 'HomeView',
   components: {
-    CategoryList
+    CategoryList,
+    ProductImage
   },
   data() {
     return {

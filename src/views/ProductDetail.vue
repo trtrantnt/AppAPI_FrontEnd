@@ -13,10 +13,11 @@
     <div v-else class="card">
       <div class="row g-0">
         <div class="col-md-6">
-          <img
-            :src="product.image ? `http://localhost:4000/${product.image}` : '/placeholder.jpg'"
-            class="img-fluid rounded-start product-image"
+          <product-image
+            :src="product.image"
             :alt="product.name"
+            class="rounded-start product-image"
+            size="large"
           />
         </div>
         <div class="col-md-6">
@@ -50,16 +51,16 @@
       <div v-else class="row">
         <div v-for="relatedProduct in relatedProducts" :key="relatedProduct._id" class="col-md-4 mb-4">
           <div class="card h-100">
-            <img
-              :src="relatedProduct.image ? `http://localhost:4000/${relatedProduct.image}` : '/placeholder.jpg'"
-              class="card-img-top"
+            <product-image
+              :src="relatedProduct.image || relatedProduct.imgURL"
               :alt="relatedProduct.name"
+              class="card-img-top"
             />
             <div class="card-body">
               <h5 class="card-title">{{ relatedProduct.name }}</h5>
               <div class="d-flex justify-content-between align-items-center">
                 <span class="fw-bold">{{ formatPrice(relatedProduct.price) }}</span>
-                <router-link :to="`/products/${relatedProduct._id}`" class="btn btn-primary">
+                <router-link :to="`/product/${relatedProduct._id}`" class="btn btn-primary">
                   Xem chi tiết
                 </router-link>
               </div>
@@ -73,9 +74,13 @@
 
 <script>
 import ProductService from '@/services/product.service';
+import ProductImage from '@/components/common/ProductImage.vue';
 
 export default {
   name: 'ProductDetail',
+  components: {
+    ProductImage
+  },
   data() {
     return {
       product: {},

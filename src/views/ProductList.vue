@@ -67,10 +67,10 @@
     <div v-else class="row">
       <div v-for="product in products" :key="product._id" class="col-md-4 mb-4">
         <div class="card h-100">
-          <img
-            :src="product.image ? `http://localhost:4000/${product.image}` : '/placeholder.jpg'"
-            class="card-img-top"
+          <product-image
+            :src="product.image"
             :alt="product.name"
+            class="card-img-top"
           />
           <div class="card-body">
             <h5 class="card-title">{{ product.name }}</h5>
@@ -115,10 +115,14 @@
 <script>
 import ProductService from '@/services/product.service';
 import CategoryService from '@/services/category.service';
+import ProductImage from '@/components/common/ProductImage.vue';
 import { debounce } from 'lodash';
 
 export default {
   name: 'ProductList',
+  components: {
+    ProductImage
+  },
   props: {
     categoryId: {
       type: String,

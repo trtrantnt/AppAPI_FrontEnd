@@ -1,30 +1,30 @@
-import axios from 'axios';
-import authHeader from './auth-header';
+import api from './api';
 
 const API_URL = 'http://localhost:3000/categories';
 
 class CategoryService {
   getAll(params = {}) {
-    return axios.get(API_URL, { 
-      params,
-      headers: authHeader() 
-    });
+    return api.get(API_URL, { params });
   }
 
   getById(id) {
-    return axios.get(`${API_URL}/${id}`, { headers: authHeader() });
+    return api.get(`${API_URL}/${id}`);
   }
 
   create(categoryData) {
-    return axios.post(API_URL, categoryData, { headers: authHeader() });
+    return api.post(API_URL, categoryData);
   }
 
   update(id, categoryData) {
-    return axios.put(`${API_URL}/${id}`, categoryData, { headers: authHeader() });
+    return api.put(`${API_URL}/${id}`, categoryData);
   }
 
   delete(id) {
-    return axios.delete(`${API_URL}/${id}`, { headers: authHeader() });
+    return api.delete(`${API_URL}/${id}`);
+  }
+
+  getCategoriesWithProductCount() {
+    return api.get(`${API_URL}?withCount=true`);
   }
 }
 

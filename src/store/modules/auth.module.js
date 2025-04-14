@@ -52,8 +52,26 @@ export default {
         if (result.success) {
           commit('loginSuccess', { user: result.user, token: result.token });
           
-          // Redirect regardless of /me endpoint success
-          router.push('/');
+          // After successful login, fetch the complete user details
+          try {
+            const userResponse = await AuthService.getCurrentUser();
+            if (userResponse.data && userResponse.data.data) {
+              console.log("User details fetched:", userResponse.data.data);
+              commit('updateUser', userResponse.data.data);
+            }
+          } catch (userError) {
+            console.error("Error fetching user details:", userError);
+            // Continue with the basic user info we have
+          }
+          
+          // Redirect based on role
+          if (result.user && result.user.role && 
+              ((typeof result.user.role === 'object' && result.user.role.name === 'admin') ||
+               (typeof result.user.role === 'string' && result.user.role === 'admin'))) {
+            router.push('/admin');
+          } else {
+            router.push('/');
+          }
           return true;
         } else {
           commit('authError', result.error || 'Login failed');
@@ -149,12 +167,55 @@ export default {
     loading: state => state.loading,
     error: state => state.error,
     hasRole: state => role => {
-      if (!state.user || !state.user.roles) return false;
-      return state.user.roles.some(r => r.name === role);
+      if (!state.user) return false;
+      
+      // Handle different role structures
+      if (state.user.role) {
+        // If role is a direct property
+        if (typeof state.user.role === 'object' && state.user.role.name) {
+          return state.user.role.name === role;
+        } else if (typeof state.user.role === 'string') {
+          return state.user.role === role;
+        }
+      }
+      
+      // Handle roles as array
+      if (state.user.roles && Array.isArray(state.user.roles)) {
+        return state.user.roles.some(r => {
+          if (typeof r === 'object') return r.name === role;
+          return r === role;
+        });
+      }
+      
+      return false;
     },
     isAdmin: state => {
-      if (!state.user || !state.user.roles) return false;
-      return state.user.roles.some(r => r.name === 'admin');
+      if (!state.user) return false;
+      
+      // For debugging
+      console.log("Checking admin status with user:", state.user);
+      
+      // Check directly if there is a role property
+      if (state.user.role) {
+        // If role is an object with name property
+        if (typeof state.user.role === 'object' && state.user.role.name) {
+          return state.user.role.name === 'admin';
+        } 
+        // If role is a string
+        else if (typeof state.user.role === 'string') {
+          return state.user.role === 'admin';
+        }
+      }
+      
+      // Check if there's a roles array
+      if (state.user.roles && Array.isArray(state.user.roles)) {
+        return state.user.roles.some(r => {
+          if (typeof r === 'object') return r.name === 'admin';
+          return r === 'admin';
+        });
+      }
+      
+      return false;
     },
     isModerator: state => {
       if (!state.user || !state.user.roles) return false;
