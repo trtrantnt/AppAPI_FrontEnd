@@ -1,9 +1,21 @@
 <template>
   <div class="product-list">
-    <h1>Sản phẩm</h1>
+    <div v-if="categoryName" class="mb-4">
+      <h2>{{ categoryName }}</h2>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><router-link to="/">Trang chủ</router-link></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ categoryName }}</li>
+        </ol>
+      </nav>
+    </div>
+    
+    <div v-else class="mb-4">
+      <h2>Tất cả sản phẩm</h2>
+    </div>
 
     <div class="row mb-4">
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="input-group">
           <input
             type="text"
@@ -18,13 +30,25 @@
         </div>
       </div>
 
-      <div class="col-md-6">
-        <div class="d-flex justify-content-end">
-          <select class="form-select w-auto" v-model="selectedCategory" @change="filterProducts">
+      <div class="col-md-4">
+        <div class="d-flex">
+          <select class="form-select" v-model="selectedCategory" @change="filterProducts">
             <option value="">Tất cả danh mục</option>
             <option v-for="category in categories" :key="category._id" :value="category._id">
               {{ category.name }}
             </option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="d-flex justify-content-end">
+          <select class="form-select w-auto" v-model="sortOption" @change="applySorting">
+            <option value="name_asc">Tên A-Z</option>
+            <option value="name_desc">Tên Z-A</option>
+            <option value="price_asc">Giá tăng dần</option>
+            <option value="price_desc">Giá giảm dần</option>
+            <option value="newest">Mới nhất</option>
           </select>
         </div>
       </div>
@@ -53,7 +77,7 @@
             <p class="card-text">{{ product.description }}</p>
             <div class="d-flex justify-content-between align-items-center">
               <span class="fw-bold">{{ formatPrice(product.price) }}</span>
-              <router-link :to="`/products/${product._id}`" class="btn btn-primary">
+              <router-link :to="`/product/${product._id}`" class="btn btn-primary">
                 Xem chi tiết
               </router-link>
             </div>
@@ -95,23 +119,67 @@ import { debounce } from 'lodash';
 
 export default {
   name: 'ProductList',
+  props: {
+    categoryId: {
+      type: String,
+      default: null
+    }
+  },
   data() {
     return {
       products: [],
       categories: [],
+      categoryName: '',
       loading: true,
       searchQuery: '',
       selectedCategory: '',
       page: 1,
-      totalPages: 0
+      totalPages: 0,
+      sortOption: 'newest'
     };
   },
+  watch: {
+    $route(to, from) {
+      // Reset and fetch when route changes (for when user clicks different categories)
+      if (to.params.categoryId !== from.params.categoryId) {
+        this.resetAndFetch();
+      }
+    }
+  },
   created() {
-    this.fetchProducts();
-    this.fetchCategories();
     this.debounceSearch = debounce(this.searchProducts, 500);
+    this.resetAndFetch();
   },
   methods: {
+    resetAndFetch() {
+      this.page = 1;
+      
+      // If categoryId is provided in the route, set it as the selected category
+      if (this.$route.params.categoryId) {
+        this.selectedCategory = this.$route.params.categoryId;
+        this.fetchCategoryName(this.$route.params.categoryId);
+      } else {
+        this.selectedCategory = '';
+        this.categoryName = '';
+      }
+      
+      this.fetchCategories();
+      this.fetchProducts();
+    },
+    async fetchCategoryName(categoryId) {
+      try {
+        const response = await CategoryService.getById(categoryId);
+        if (response && response.data && response.data.data) {
+          this.categoryName = response.data.data.name;
+        } else {
+          console.warn('Invalid category response format:', response);
+          this.categoryName = 'Danh mục sản phẩm';
+        }
+      } catch (error) {
+        console.error('Error fetching category details:', error);
+        this.categoryName = 'Danh mục sản phẩm';
+      }
+    },
     async fetchProducts() {
       this.loading = true;
       try {
@@ -127,7 +195,30 @@ export default {
         if (this.selectedCategory) {
           params.category = this.selectedCategory;
         }
+        
+        // Apply sorting
+        if (this.sortOption) {
+          switch(this.sortOption) {
+            case 'name_asc':
+              params.sort = 'name';
+              break;
+            case 'name_desc':
+              params.sort = '-name';
+              break;
+            case 'price_asc':
+              params.sort = 'price';
+              break;
+            case 'price_desc':
+              params.sort = '-price';
+              break;
+            case 'newest':
+              params.sort = '-createdAt';
+              break;
+          }
+        }
 
+        console.log('Fetching products with params:', params);
+        
         const response = await ProductService.getAll(params);
         
         // Handle the case where response might be empty or malformed
@@ -174,6 +265,10 @@ export default {
       this.fetchProducts();
     },
     filterProducts() {
+      this.page = 1;
+      this.fetchProducts();
+    },
+    applySorting() {
       this.page = 1;
       this.fetchProducts();
     },

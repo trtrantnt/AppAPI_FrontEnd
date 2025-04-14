@@ -33,9 +33,13 @@
       </div>
     </section>
 
-    <!-- Added new section for categories -->
-    <section class="categories-section py-5">
+    <!-- Added new section for categories with improved styling -->
+    <section class="categories-section py-5 bg-light">
       <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Danh mục món ăn</h2>
+          <p class="section-subtitle">Khám phá các món ăn đa dạng của chúng tôi</p>
+        </div>
         <category-list />
       </div>
     </section>
@@ -152,5 +156,22 @@ export default {
 .card-img-top {
   height: 200px;
   object-fit: cover;
+}
+
+.section-title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.section-subtitle {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.categories-section {
+  margin-bottom: 0;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 </style>

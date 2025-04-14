@@ -1,8 +1,8 @@
 <template>
   <div class="category-list">
-    <h2 class="mb-4">Danh mục sản phẩm</h2>
+    <h3 class="mb-4 text-center">Danh mục món ăn</h3>
     
-    <div v-if="loading" class="text-center py-3">
+    <div v-if="loading" class="text-center">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Đang tải...</span>
       </div>
@@ -12,18 +12,16 @@
       {{ error }}
     </div>
     
-    <div v-else>
-      <div class="list-group">
-        <router-link 
-          v-for="category in categories" 
-          :key="category._id" 
-          :to="`/products?category=${category._id}`"
-          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-        >
-          {{ category.name }}
-          <span class="badge bg-primary rounded-pill" v-if="category.productCount">
-            {{ category.productCount }}
-          </span>
+    <div v-else class="row">
+      <div v-for="category in categories" :key="category._id" class="col-md-4 mb-4">
+        <router-link :to="`/products/category/${category._id}`" class="text-decoration-none">
+          <div class="card h-100 category-card">
+            <div class="card-body text-center">
+              <i class="bi bi-collection fs-3 mb-3"></i>
+              <h5 class="card-title">{{ category.name }}</h5>
+              <p class="card-text small text-muted">{{ category.description }}</p>
+            </div>
+          </div>
         </router-link>
       </div>
     </div>
@@ -122,5 +120,19 @@ export default {
 
 .list-group-item:hover .badge {
   transform: scale(1.1);
+}
+
+.category-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.bi {
+  color: #0d6efd;
 }
 </style>

@@ -14,6 +14,7 @@ import ForgotPassword from '@/views/auth/ForgotPassword.vue'
 // Import general views
 import Home from '@/views/Home.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
+import ProductList from '@/views/ProductList.vue'
 import Cart from '@/views/Cart.vue'
 import NotFound from '@/views/NotFound.vue'
 
@@ -41,6 +42,12 @@ const routes = [
         path: 'product/:id',
         name: 'ProductDetail',
         component: ProductDetail
+      },
+      {
+        path: 'products/category/:categoryId',
+        name: 'CategoryProducts',
+        component: ProductList,
+        props: true
       },
       {
         path: 'cart',
