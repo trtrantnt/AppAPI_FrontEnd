@@ -1,76 +1,144 @@
 <template>
   <div class="register-container">
-    <div class="card">
-      <div class="card-header">
-        <h3>Register</h3>
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Đăng ký tài khoản</h4>
       </div>
       <div class="card-body">
-        <form @submit.prevent="register">
+        <div v-if="error" class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        
+        <form @submit.prevent="handleRegister">
           <div class="mb-3">
-            <label for="name" class="form-label">Full Name</label>
-            <input type="text" class="form-control" id="name" v-model="name" required>
+            <label for="username" class="form-label">Tên đăng nhập</label>
+            <input 
+              type="text"
+              id="username"
+              v-model="formData.username"
+              class="form-control" 
+              required
+              autofocus
+            />
+            <small class="text-muted">Tối thiểu 6 ký tự</small>
           </div>
+          
           <div class="mb-3">
-            <label for="email" class="form-label">Email address</label>
-            <input type="email" class="form-control" id="email" v-model="email" required>
+            <label for="email" class="form-label">Email</label>
+            <input 
+              type="email" 
+              id="email"
+              v-model="formData.email"
+              class="form-control" 
+              required
+            />
           </div>
+          
           <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" v-model="password" required>
+            <label for="password" class="form-label">Mật khẩu</label>
+            <input 
+              type="password" 
+              id="password"
+              v-model="formData.password"
+              class="form-control" 
+              required
+            />
+            <small class="text-muted">
+              Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
+            </small>
           </div>
+          
           <div class="mb-3">
-            <label for="confirmPassword" class="form-label">Confirm Password</label>
-            <input type="password" class="form-control" id="confirmPassword" v-model="confirmPassword" required>
+            <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+            <input 
+              type="password" 
+              id="confirmPassword"
+              v-model="formData.confirmPassword"
+              class="form-control" 
+              required
+            />
           </div>
-          <button type="submit" class="btn btn-primary">Register</button>
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Đăng ký
+            </button>
+          </div>
         </form>
+        
+        <div class="mt-3 text-center">
+          <p>Đã có tài khoản? <router-link to="/auth/login">Đăng nhập</router-link></p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
-  name: 'UserRegister',
+  name: 'RegisterPage',
   data() {
     return {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
+      formData: {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      }
+    };
+  },
+  computed: {
+    ...mapGetters({
+      loading: 'auth/loading',
+      error: 'auth/error'
+    })
   },
   methods: {
-    ...mapActions(['login']),
-    async register() {
+    ...mapActions({
+      register: 'auth/register',
+      clearError: 'auth/clearAuthError'
+    }),
+    async handleRegister() {
+      // Validate form data first
+      if (this.formData.password !== this.formData.confirmPassword) {
+        // Using auth/authError mutation directly through a custom action
+        this.$store.commit('auth/authError', 'Mật khẩu xác nhận không khớp');
+        return;
+      }
+      
       try {
-        if (this.password !== this.confirmPassword) {
-          alert("Passwords don't match")
-          return
+        // Prepare data to match backend requirements
+        const userData = {
+          username: this.formData.username,
+          email: this.formData.email,
+          password: this.formData.password
+        };
+        
+        const response = await this.register(userData);
+        
+        if (response && response.data && response.data.success) {
+          this.$router.push({
+            path: '/auth/login',
+            query: { registered: 'success' }
+          });
         }
-        // Here you would make an API call to register the user
-        const user = { name: this.name, email: this.email }
-        this.login(user) // Auto login after registration
-        this.$router.push('/')
       } catch (error) {
-        console.error('Registration failed', error)
+        console.error('Registration failed:', error);
       }
     }
+  },
+  created() {
+    this.clearError();
   }
-}
+};
 </script>
 
 <style scoped>
 .register-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-}
-.card {
-  width: 400px;
-  max-width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
 }
 </style>

@@ -7,7 +7,22 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-                    
+          <!-- Loading indicator for menus -->
+          <li v-if="menuLoading" class="nav-item">
+            <span class="nav-link">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Loading...
+            </span>
+          </li>
+          
+          <!-- Menu error message -->
+          <li v-else-if="menuError" class="nav-item">
+            <span class="nav-link text-danger">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              {{ menuError }}
+            </span>
+          </li>
+          
           <!-- Single Menu Items -->
           <li v-for="menu in singleMenus" :key="menu.url" class="nav-item">
             <router-link class="nav-link" :to="menu.url">{{ menu.text }}</router-link>
@@ -57,13 +72,27 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
   name: 'AppNavbar',
+  data() {
+    return {
+      menus: [],
+      menuLoading: false,
+      menuError: null,
+      retryCount: 0
+    };
+  },
   computed: {
-    ...mapGetters('auth', ['isLoggedIn', 'currentUser', 'isAdmin']),
-    ...mapGetters('menu', ['menus']),
+    ...mapGetters({
+      isLoggedIn: 'auth/isLoggedIn',
+      currentUser: 'auth/currentUser',
+      isAdmin: 'auth/isAdmin',
+      storeMenus: 'menu/menus',
+      menuLoadingState: 'menu/loading',
+      menuErrorState: 'menu/error'
+    }),
     dropdownMenus() {
       return this.menus.filter(menu => menu.children && menu.children.length > 0);
     },
@@ -71,20 +100,65 @@ export default {
       return this.menus.filter(menu => !menu.children || menu.children.length === 0);
     }
   },
+  watch: {
+    // Watch for changes in the store menus
+    storeMenus: {
+      handler(newMenus) {
+        if (newMenus && newMenus.length) {
+          this.menus = newMenus;
+        }
+      },
+      immediate: true
+    },
+    // Watch loading state from store
+    menuLoadingState(newValue) {
+      this.menuLoading = newValue;
+    },
+    // Watch error state from store
+    menuErrorState(newValue) {
+      this.menuError = newValue;
+    }
+  },
   methods: {
-    ...mapActions('auth', ['logout']),
-    ...mapActions('menu', ['fetchMenus']),
+    ...mapActions({
+      logout: 'auth/logout',
+      fetchMenus: 'menu/fetchMenus'
+    }),
     async handleLogout() {
       try {
         await this.logout();
-        this.$router.push('/');
+        this.$router.push('/auth/login');
       } catch (error) {
         console.error('Logout failed:', error);
+      }
+    },
+    async loadMenus() {
+      this.menuLoading = true;
+      this.menuError = null;
+      
+      try {
+        await this.fetchMenus();
+        console.log('Menus loaded successfully:', this.storeMenus);
+        this.menus = this.storeMenus || [];
+      } catch (error) {
+        console.error('Error loading menus:', error);
+        this.menuError = 'Failed to load menu';
+        
+        // Retry logic if needed
+        if (this.retryCount < 3) {
+          this.retryCount++;
+          setTimeout(() => {
+            this.loadMenus();
+          }, 2000); // Retry after 2 seconds
+        }
+      } finally {
+        this.menuLoading = false;
       }
     }
   },
   created() {
-    this.fetchMenus();
+    // Load menus when component is created
+    this.loadMenus();
   }
 };
 </script>
@@ -92,5 +166,9 @@ export default {
 <style scoped>
 .navbar {
   margin-bottom: 20px;
+}
+
+.nav-link .spinner-border-sm {
+  margin-right: 5px;
 }
 </style>

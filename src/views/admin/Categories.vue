@@ -7,6 +7,17 @@
       </button>
     </div>
 
+    <!-- Alert Messages -->
+    <div 
+      v-if="alertMessage" 
+      class="alert" 
+      :class="`alert-${alertType}`" 
+      style="position: fixed; top: 20px; right: 20px; z-index: 9999;"
+    >
+      {{ alertMessage }}
+      <button type="button" class="btn-close float-end" @click="clearAlert"></button>
+    </div>
+
     <div class="card">
       <div class="card-body">
         <div v-if="loading" class="text-center py-3">
@@ -72,6 +83,9 @@
                   v-model="currentCategory.name"
                   required
                 />
+                <div class="invalid-feedback" v-if="validationErrors.name">
+                  {{ validationErrors.name }}
+                </div>
               </div>
               <div class="mb-3">
                 <label for="categoryDescription" class="form-label">Mô tả</label>
@@ -125,16 +139,6 @@
         </div>
       </div>
     </div>
-    
-    <!-- Alert Messages -->
-    <div 
-      v-if="alertMessage" 
-      class="alert" 
-      :class="`alert-${alertType}`" 
-      style="position: fixed; top: 20px; right: 20px; z-index: 9999;"
-    >
-      {{ alertMessage }}
-    </div>
   </div>
 </template>
 
@@ -143,7 +147,6 @@ import CategoryService from '@/services/category.service';
 import { Modal } from 'bootstrap';
 
 export default {
-  // Fix ESLint warning by using a multi-word component name
   name: 'CategoriesView',
   data() {
     return {
@@ -160,8 +163,9 @@ export default {
       categoryModal: null,
       deleteModal: null,
       alertMessage: '',
-      alertType: 'success', // success, danger, warning, info
-      alertTimeout: null
+      alertType: 'success',
+      alertTimeout: null,
+      validationErrors: {}
     };
   },
   created() {
@@ -176,7 +180,7 @@ export default {
       this.loading = true;
       try {
         const response = await CategoryService.getAll({ withCount: true });
-        this.categories = response.data.data;
+        this.categories = response.data.data || [];
       } catch (error) {
         console.error('Error fetching categories:', error);
         this.showAlert('Không thể tải danh sách danh mục', 'danger');
@@ -186,6 +190,8 @@ export default {
     },
     
     openModal(category = null) {
+      this.validationErrors = {};
+      
       if (category) {
         this.currentCategory = { ...category };
         this.isEditing = true;
@@ -198,6 +204,7 @@ export default {
         };
         this.isEditing = false;
       }
+      
       this.categoryModal.show();
     },
     
@@ -206,27 +213,52 @@ export default {
       this.deleteModal.show();
     },
     
+    validateForm() {
+      this.validationErrors = {};
+      let isValid = true;
+      
+      if (!this.currentCategory.name.trim()) {
+        this.validationErrors.name = 'Tên danh mục không được để trống';
+        isValid = false;
+      } else if (this.currentCategory.name.length < 2) {
+        this.validationErrors.name = 'Tên danh mục phải có ít nhất 2 ký tự';
+        isValid = false;
+      }
+      
+      return isValid;
+    },
+    
     async saveCategory() {
+      if (!this.validateForm()) {
+        return;
+      }
+      
       this.modalLoading = true;
       try {
+        const categoryData = {
+          name: this.currentCategory.name,
+          description: this.currentCategory.description || ''
+        };
+        
         if (this.isEditing) {
-          await CategoryService.update(this.currentCategory._id, {
-            name: this.currentCategory.name,
-            description: this.currentCategory.description
-          });
+          await CategoryService.update(this.currentCategory._id, categoryData);
           this.showAlert('Cập nhật danh mục thành công', 'success');
         } else {
-          await CategoryService.create({
-            name: this.currentCategory.name,
-            description: this.currentCategory.description
-          });
+          await CategoryService.create(categoryData);
           this.showAlert('Thêm danh mục mới thành công', 'success');
         }
+        
         this.fetchCategories();
         this.categoryModal.hide();
       } catch (error) {
         console.error('Error saving category:', error);
-        this.showAlert(error.response?.data?.message || 'Đã xảy ra lỗi khi lưu danh mục', 'danger');
+        const errorMessage = error.response?.data?.message || 'Đã xảy ra lỗi khi lưu danh mục';
+        
+        if (error.response?.data?.errors) {
+          this.validationErrors = error.response.data.errors;
+        }
+        
+        this.showAlert(errorMessage, 'danger');
       } finally {
         this.modalLoading = false;
       }
@@ -257,8 +289,37 @@ export default {
       
       this.alertTimeout = setTimeout(() => {
         this.alertMessage = '';
-      }, 3000);
+      }, 5000);
+    },
+    
+    clearAlert() {
+      this.alertMessage = '';
+      if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout);
+      }
     }
   }
 };
 </script>
+
+<style scoped>
+.categories-admin {
+  position: relative;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.btn-group .btn {
+  margin-right: 5px;
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0;
+}
+
+.invalid-feedback {
+  display: block;
+}
+</style>

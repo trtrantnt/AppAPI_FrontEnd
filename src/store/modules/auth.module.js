@@ -1,5 +1,6 @@
 // src/store/modules/auth.module.js
 import AuthService from '@/services/auth.service';
+import router from '@/router';
 
 export default {
   namespaced: true,
@@ -43,46 +44,43 @@ export default {
     }
   },
   actions: {
-    async login({ commit }, credentials) {
+    async login({ commit }, { username, password }) {
       commit('authRequest');
       try {
-        const response = await AuthService.login(credentials);
-        // Kiểm tra cấu trúc response từ API của bạn
-        // Điều chỉnh theo cấu trúc response thực tế
-        const { user, token } = response.data.data || {};
+        const result = await AuthService.login(username, password);
         
-        if (!user || !token) {
-          throw new Error('Invalid response format');
+        if (result.success) {
+          commit('loginSuccess', { user: result.user, token: result.token });
+          
+          // Redirect regardless of /me endpoint success
+          router.push('/');
+          return true;
+        } else {
+          commit('authError', result.error || 'Login failed');
+          return false;
         }
-        
-        commit('loginSuccess', { user, token });
-        return response;
       } catch (error) {
-        commit('authError', error.response?.data?.message || 'Authentication failed');
-        throw error;
+        commit('authError', error.response?.data?.message || 'Login failed');
+        return false;
       }
     },
     async register({ commit }, userData) {
       commit('authRequest');
       try {
+        // Call the signup endpoint with the required fields
         const response = await AuthService.register(userData);
         return response;
       } catch (error) {
-        commit('authError', error.response?.data?.message || 'Registration failed');
+        const errorMessage = error.response?.data?.message || 
+                            (Array.isArray(error.response?.data) ? error.response.data[0].msg : 'Registration failed');
+        commit('authError', errorMessage);
         throw error;
       }
     },
-    async logout({ commit }) {
-      try {
-        // Chỉ gọi API logout nếu có token
-        if (localStorage.getItem('token')) {
-          await AuthService.logout();
-        }
-      } catch (error) {
-        console.error('Logout error:', error);
-      } finally {
-        commit('logout');
-      }
+    logout({ commit }) {
+      AuthService.logout();
+      commit('logout');
+      router.push('/auth/login');
     },
     async getCurrentUser({ commit, state }) {
       // Không cần gọi API nếu không có token

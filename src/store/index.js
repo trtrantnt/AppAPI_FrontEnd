@@ -1,6 +1,9 @@
 // src/store/index.js
 import { createStore } from 'vuex'
 import menu from './modules/menu.module'
+import category from './modules/category.module'
+import auth from './modules/auth.module'
+import product from './modules/product.module'
 
 export default createStore({
   state: {
@@ -43,6 +46,9 @@ export default createStore({
     }
   },
   modules: {
-    menu
+    menu,
+    category,
+    auth,
+    product
   }
 })

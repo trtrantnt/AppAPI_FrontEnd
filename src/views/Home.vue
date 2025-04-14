@@ -7,9 +7,19 @@
             <h2 class="display-4 fw-bold">Chào mừng đến với Scan & Savor</h2>
             <p class="lead my-4">Scan mã để order và tận hưởng món ăn.</p>
             <div class="mt-4">
-              <router-link to="/auth/register" class="btn btn-outline-primary btn-lg">
+              <!-- Show register button if not logged in -->
+              <router-link v-if="!isLoggedIn" to="/auth/register" class="btn btn-outline-primary btn-lg">
                 Đăng ký ngay
               </router-link>
+              <!-- Show logout button if logged in -->
+              <div v-if="isLoggedIn" class="d-flex justify-content-center gap-3">
+                <span class="d-flex align-items-center me-3">
+                  Xin chào, {{ currentUser ? currentUser.fullname || currentUser.username : 'Người dùng' }}!
+                </span>
+                <button @click="handleLogout" class="btn btn-danger">
+                  <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-md-6 text-center">
@@ -20,6 +30,13 @@
             />
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Added new section for categories -->
+    <section class="categories-section py-5">
+      <div class="container">
+        <category-list />
       </div>
     </section>
 
@@ -59,10 +76,14 @@
 
 <script>
 import ProductService from '@/services/product.service';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
+import CategoryList from '@/components/category/CategoryList.vue';
 
 export default {
   name: 'HomeView',
+  components: {
+    CategoryList
+  },
   data() {
     return {
       featuredProducts: [],
@@ -76,6 +97,9 @@ export default {
     this.fetchFeaturedProducts();
   },
   methods: {
+    ...mapActions({
+      logout: 'auth/logout'
+    }),
     async fetchFeaturedProducts() {
       try {
         const response = await ProductService.getAll({ featured: true, limit: 3 });
@@ -91,6 +115,14 @@ export default {
         style: 'currency',
         currency: 'VND'
       }).format(price);
+    },
+    async handleLogout() {
+      try {
+        await this.logout();
+        this.$router.push('/auth/login');
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
     }
   }
 };

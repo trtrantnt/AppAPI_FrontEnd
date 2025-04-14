@@ -28,7 +28,7 @@ api.interceptors.response.use(
   error => {
     if (error.response && error.response.status === 401) {
       store.dispatch('auth/logout');
-      router.push('/login');
+      router.push('/auth/login');
     }
     return Promise.reject(error);
   }

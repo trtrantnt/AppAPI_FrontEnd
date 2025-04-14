@@ -1,55 +1,109 @@
 <!-- src/views/auth/Login.vue -->
 <template>
   <div class="login-container">
-    <div class="card">
-      <div class="card-header">
-        <h3>Login</h3>
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Đăng nhập</h4>
       </div>
       <div class="card-body">
+        <div v-if="error" class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        
         <form @submit.prevent="handleLogin">
           <div class="mb-3">
-            <label for="email" class="form-label">Email address</label>
-            <input type="email" class="form-control" id="email" v-model="email" required>
+            <label for="username" class="form-label">Tên đăng nhập</label>
+            <input 
+              type="text"
+              id="username"
+              v-model="username"
+              class="form-control" 
+              required
+              autofocus
+            />
           </div>
+          
           <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" v-model="password" required>
+            <label for="password" class="form-label">Mật khẩu</label>
+            <input 
+              type="password" 
+              id="password"
+              v-model="password"
+              class="form-control" 
+              required
+            />
           </div>
+          
           <div class="mb-3 form-check">
             <input type="checkbox" class="form-check-input" id="remember" v-model="remember">
-            <label class="form-check-label" for="remember">Remember me</label>
+            <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
           </div>
-          <button type="submit" class="btn btn-primary">Login</button>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Đăng nhập
+            </button>
+          </div>
         </form>
+        
+        <div class="mt-3 text-center">
+          <router-link to="/auth/forgot-password">Quên mật khẩu?</router-link>
+          <div class="mt-2">
+            Chưa có tài khoản? <router-link to="/auth/register">Đăng ký</router-link>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'LoginPage',
   data() {
     return {
-      email: '',
+      username: '',
       password: '',
       remember: false
     }
   },
+  computed: {
+    ...mapGetters({
+      error: 'auth/error',
+      loading: 'auth/loading'
+    })
+  },
   methods: {
-    ...mapActions(['login']),
+    ...mapActions({
+      login: 'auth/login',
+      clearError: 'auth/clearAuthError'
+    }),
     async handleLogin() {
+      if (!this.username || !this.password) {
+        return;
+      }
+      
       try {
-        // Here you would normally make an API call to authenticate
-        const user = { email: this.email }
-        this.login(user)
-        this.$router.push('/')
+        const success = await this.login({
+          username: this.username,
+          password: this.password
+        });
+        
+        if (success) {
+          console.log('Login successful, redirecting...');
+          // Router push is handled in the store action
+        }
       } catch (error) {
-        console.error('Login failed', error)
+        console.error('Login failed', error);
       }
     }
+  },
+  created() {
+    // Clear any previous auth errors when component is created
+    if (this.clearError) this.clearError();
   }
 }
 </script>
