@@ -15,6 +15,9 @@ import ForgotPassword from '@/views/auth/ForgotPassword.vue'
 import Home from '@/views/Home.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
 import ProductList from '@/views/ProductList.vue'
+import CategoryList from '@/views/CategoryList.vue'
+import MenuItems from '@/views/MenuItems.vue'
+import FoodItems from '@/views/FoodItems.vue'
 import Cart from '@/views/Cart.vue'
 import NotFound from '@/views/NotFound.vue'
 
@@ -38,6 +41,12 @@ const routes = [
         name: 'Home',
         component: Home
       },
+      // Add the new route for all food items
+      {
+        path: 'mon-an',
+        name: 'FoodItems',
+        component: FoodItems
+      },
       {
         path: 'product/:id',
         name: 'ProductDetail',
@@ -47,6 +56,17 @@ const routes = [
         path: 'products/category/:categoryId',
         name: 'CategoryProducts',
         component: ProductList,
+        props: true
+      },
+      {
+        path: 'danh-muc',
+        name: 'CategoryList',
+        component: CategoryList
+      },
+      {
+        path: 'menu/:categoryId',
+        name: 'MenuItems',
+        component: MenuItems,
         props: true
       },
       {

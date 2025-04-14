@@ -1,8 +1,6 @@
 <template>
-  <div class="category-list">
-    <h3 class="mb-4 text-center">Danh mục món ăn</h3>
-    
-    <div v-if="loading" class="text-center">
+  <div class="category-component">
+    <div v-if="loading" class="text-center py-3">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Đang tải...</span>
       </div>
@@ -13,16 +11,18 @@
     </div>
     
     <div v-else class="row">
-      <div v-for="category in categories" :key="category._id" class="col-md-4 mb-4">
-        <router-link :to="`/products/category/${category._id}`" class="text-decoration-none">
-          <div class="card h-100 category-card">
-            <div class="card-body text-center">
-              <i class="bi bi-collection fs-3 mb-3"></i>
-              <h5 class="card-title">{{ category.name }}</h5>
-              <p class="card-text small text-muted">{{ category.description }}</p>
-            </div>
+      <div v-for="category in categories" :key="category._id" class="col-md-3 mb-4">
+        <div class="category-card card h-100">
+          <div class="card-body text-center">
+            <i class="bi bi-grid-3x3-gap-fill category-icon"></i>
+            <h5 class="card-title mt-2">{{ category.name }}</h5>
           </div>
-        </router-link>
+          <div class="card-footer bg-transparent border-0 text-center">
+            <router-link :to="`/menu/${category._id}`" class="btn btn-outline-primary btn-sm">
+              Xem món ăn
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -49,18 +49,17 @@ export default {
       this.error = null;
       
       try {
-        const response = await CategoryService.getAll();
-        if (response.data && Array.isArray(response.data)) {
-          this.categories = response.data;
-        } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        const response = await CategoryService.getAll({ limit: 8 }); // Limit to 8 categories for homepage
+        if (response.data && response.data.data) {
           this.categories = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          this.categories = response.data;
         } else {
           this.categories = [];
-          console.warn('Received unexpected response format from categories API');
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        this.error = 'Không thể tải danh sách danh mục. Vui lòng thử lại sau.';
+        this.error = 'Failed to load categories';
       } finally {
         this.loading = false;
       }
@@ -124,12 +123,23 @@ export default {
 
 .category-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .category-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.category-icon {
+  font-size: 2rem;
+  color: #0d6efd;
+}
+
+.card-title {
+  color: #333;
+  font-weight: 600;
 }
 
 .bi {

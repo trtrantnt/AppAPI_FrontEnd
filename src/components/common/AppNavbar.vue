@@ -23,6 +23,8 @@
             </span>
           </li>
           
+          <!-- Removed the direct link to categories (Danh mục món ăn) -->
+          
           <!-- Single Menu Items -->
           <li v-for="menu in singleMenus" :key="menu.url" class="nav-item">
             <router-link class="nav-link" :to="menu.url">{{ menu.text }}</router-link>

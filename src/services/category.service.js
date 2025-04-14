@@ -11,6 +11,10 @@ class CategoryService {
     return api.get(`${API_URL}/${id}`);
   }
 
+  getCategoriesWithProductCount() {
+    return api.get(`${API_URL}/with-product-count`);
+  }
+
   create(categoryData) {
     return api.post(API_URL, categoryData);
   }
@@ -21,10 +25,6 @@ class CategoryService {
 
   delete(id) {
     return api.delete(`${API_URL}/${id}`);
-  }
-
-  getCategoriesWithProductCount() {
-    return api.get(`${API_URL}?withCount=true`);
   }
 }
 
