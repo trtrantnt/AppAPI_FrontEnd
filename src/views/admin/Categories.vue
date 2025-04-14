@@ -186,23 +186,44 @@ export default {
     async fetchCategories() {
       this.loading = true;
       try {
-        // First try to get categories with product counts from backend
-        const response = await CategoryService.getCategoriesWithProductCount();
-        console.log('Categories response with count:', response);
+        // Add debugging for network requests
+        console.log('Starting category fetch process');
         
-        // Process the response data
+        // First try to get categories with product counts from backend
+        let response;
+        try {
+          console.log('Attempting to fetch categories with product count');
+          response = await CategoryService.getCategoriesWithProductCount();
+          console.log('Categories response with count:', response);
+        } catch (countError) {
+          console.warn('Could not fetch categories with product count:', countError);
+          // Fall back to regular categories endpoint
+          console.log('Falling back to regular categories endpoint');
+          response = await CategoryService.getAll();
+          console.log('Fallback categories response:', response);
+        }
+        
+        // Process the response data with detailed logging
+        console.log('Raw response:', response);
         let categoriesData = [];
         if (response && response.data) {
+          console.log('Response data structure:', {
+            hasSuccess: 'success' in response.data,
+            hasData: 'data' in response.data,
+            isDataArray: response.data.data && Array.isArray(response.data.data),
+            isResponseArray: Array.isArray(response.data)
+          });
+          
           if (response.data.success && Array.isArray(response.data.data)) {
             categoriesData = response.data.data;
           } else if (Array.isArray(response.data)) {
             categoriesData = response.data;
           } else if (response.data.data && Array.isArray(response.data.data)) {
             categoriesData = response.data.data;
-          } else if (Array.isArray(response)) {
-            categoriesData = response;
           }
         }
+        
+        console.log('Extracted categories data:', categoriesData);
         
         // Prepare categories with initial values
         this.categories = categoriesData.map(category => ({
@@ -214,7 +235,7 @@ export default {
         }));
         
         // If backend doesn't provide product counts, get them manually
-        if (this.categories.every(cat => cat.productCount === 0)) {
+        if (this.categories.every(cat => !cat.productCount)) {
           await this.fetchProductCountForCategories();
         }
         
@@ -227,6 +248,7 @@ export default {
       }
     },
     
+    // Count products for each category
     async fetchProductCountForCategories() {
       try {
         // Get all products

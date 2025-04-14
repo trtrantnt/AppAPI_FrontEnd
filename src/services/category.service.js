@@ -12,7 +12,8 @@ class CategoryService {
   }
 
   getCategoriesWithProductCount() {
-    return api.get(`${API_URL}/with-product-count`);
+    // Update this endpoint to match what's in the backend routes
+    return api.get(`${API_URL}/with-products`);
   }
 
   create(categoryData) {

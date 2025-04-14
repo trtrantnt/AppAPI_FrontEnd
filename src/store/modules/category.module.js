@@ -30,8 +30,19 @@ export default {
       commit('setLoading', true);
       try {
         const response = await CategoryService.getAll();
-        commit('setCategories', response.data.data);
-        return response.data;
+        
+        // Handle different response structures
+        let categories = [];
+        if (response.data) {
+          if (response.data.data && Array.isArray(response.data.data)) {
+            categories = response.data.data;
+          } else if (Array.isArray(response.data)) {
+            categories = response.data;
+          }
+        }
+        
+        commit('setCategories', categories);
+        return { data: categories };
       } catch (error) {
         commit('setError', error.response?.data?.message || 'Failed to fetch categories');
         throw error;
